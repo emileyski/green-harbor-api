@@ -10,5 +10,6 @@ import { CategoryModule } from 'src/category/category.module';
   imports: [TypeOrmModule.forFeature([Plant]), FilesModule, CategoryModule],
   controllers: [PlantController],
   providers: [PlantService],
+  exports: [PlantService],
 })
 export class PlantModule {}

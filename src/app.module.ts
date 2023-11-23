@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { PlantModule } from './plant/plant.module';
 import { FilesModule } from './files/files.module';
 import { CategoryModule } from './category/category.module';
+import { SupplyModule } from './supply/supply.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { CategoryModule } from './category/category.module';
     PlantModule,
     FilesModule,
     CategoryModule,
+    SupplyModule,
+    OrderModule,
   ],
   providers: [
     {

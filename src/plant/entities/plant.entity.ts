@@ -1,6 +1,13 @@
 import { Category } from 'src/category/entities/category.entity';
 import { PlantCharacteristic } from 'src/core/interfaces/plant-characteristic.interface';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Supply } from 'src/supply/entities/supply.entity';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Plant {
@@ -23,4 +30,7 @@ export class Plant {
     onDelete: 'CASCADE',
   })
   category: Category;
+
+  @OneToMany(() => Supply, (supply) => supply.plant, { onDelete: 'CASCADE' })
+  supplies: Supply[];
 }

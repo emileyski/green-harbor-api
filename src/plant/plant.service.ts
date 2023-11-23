@@ -40,6 +40,16 @@ export class PlantService {
     });
   }
 
+  async findOne(id: string) {
+    const plant = await this.plantRepository.findOne({ where: { id } });
+
+    if (!plant) throw new NotFoundException(`Plant with ID ${id} not found`);
+
+    plant.pictures = this.convertPicturesToUrls(plant.pictures);
+
+    return plant;
+  }
+
   async updateName(id: string, name: string) {
     const plant = await this.plantRepository.findOne({ where: { id } });
 
