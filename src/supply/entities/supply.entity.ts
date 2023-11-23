@@ -1,5 +1,12 @@
+import { OrderItem } from 'src/order/entities/order-item.entity';
 import { Plant } from 'src/plant/entities/plant.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Supply {
@@ -40,4 +47,9 @@ export class Supply {
     onDelete: 'CASCADE',
   })
   plant: Plant;
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.supply, {
+    onDelete: 'CASCADE',
+  })
+  orderItems: OrderItem[];
 }

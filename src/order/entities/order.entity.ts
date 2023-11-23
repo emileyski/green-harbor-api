@@ -1,7 +1,15 @@
-import { OrderStatus } from 'src/core/enums/order-status.enum';
+import { OrderStatus as OrderStatusEnum } from 'src/core/enums/order-status.enum';
 import { PaymentType } from 'src/core/enums/payment-type.enum';
 import { User } from 'src/user/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrderItem } from './order-item.entity';
+import { OrderStatus } from './order-status.entity';
 
 @Entity()
 export class Order {
@@ -17,8 +25,17 @@ export class Order {
   @Column({ nullable: true })
   completedAt?: Date;
 
-  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.CREATED })
-  status: OrderStatus;
+  @Column({
+    type: 'enum',
+    enum: OrderStatusEnum,
+    default: OrderStatusEnum.CREATED,
+  })
+  currentStatus: OrderStatusEnum;
+
+  @OneToMany(() => OrderStatus, (orderStatus) => orderStatus.order, {
+    onDelete: 'CASCADE',
+  })
+  orderStatuses: OrderStatusEnum[];
 
   @Column()
   deliveryAddress: string;
@@ -28,4 +45,9 @@ export class Order {
 
   @ManyToOne(() => User, (user) => user.orders, { onDelete: 'CASCADE' })
   user: User;
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
+    onDelete: 'CASCADE',
+  })
+  orderItems: OrderItem[];
 }
