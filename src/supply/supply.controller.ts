@@ -12,6 +12,8 @@ import { AccessTokenGuard } from 'src/core/guards/access-token.guard';
 import { Role } from 'src/core/decorators/role.decorator';
 import { Roles } from 'src/core/enums/roles.enum';
 import { CreateSupplyDto } from './dto/create-supply.dto';
+import { User } from 'src/core/decorators/user.decorator';
+import { RoleGuard } from 'src/core/guards/role.guard';
 
 @Controller('supply')
 export class SupplyController {
@@ -29,10 +31,11 @@ export class SupplyController {
     return this.supplyService.getAll();
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, RoleGuard)
   @Role(Roles.ADMIN)
   @Post()
   async createSupply(@Body() createSupplyDto: CreateSupplyDto) {
+    // console.log('user', user);
     return this.supplyService.createSupply(createSupplyDto);
   }
 

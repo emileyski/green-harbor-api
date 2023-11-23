@@ -1,5 +1,12 @@
 import { Roles } from 'src/core/enums/roles.enum';
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Order } from 'src/order/entities/order.entity';
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class User {
@@ -27,4 +34,7 @@ export class User {
 
   @Column({ nullable: true })
   mobilePhone?: string;
+
+  @OneToMany(() => Order, (order) => order.user, { onDelete: 'CASCADE' })
+  orders: Order[];
 }
