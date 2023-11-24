@@ -71,4 +71,66 @@ export class UserService {
       );
     }
   }
+
+  //#region update actions
+
+  async updateName(id: string, name: string) {
+    const updateResult = await this.userRepository.update(id, { name });
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return await this.userRepository.findOne({ where: { id } });
+  }
+
+  async updateEmail(id: string, email: string) {
+    const emailIsValid = /^\S+@\S+\.\S+$/.test(email);
+
+    if (!emailIsValid) throw new ConflictException('Invalid email');
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (user) throw new ConflictException('Email already taken');
+
+    const updateResult = await this.userRepository.update(id, { email });
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return await this.userRepository.findOne({ where: { id } });
+  }
+
+  async updatePassword(id: string, password: string) {
+    const hashedPassword = await hash(password);
+
+    const updateResult = await this.userRepository.update(id, {
+      password: hashedPassword,
+    });
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return await this.userRepository.findOne({ where: { id } });
+  }
+
+  async updatePhone(id: string, phone: string) {
+    const phoneIsValid = /^\+380\d{9}$/.test(phone);
+
+    if (!phoneIsValid) throw new ConflictException('Invalid phone number');
+
+    const updateResult = await this.userRepository.update(id, {
+      mobilePhone: phone,
+    });
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return await this.userRepository.findOne({ where: { id } });
+  }
+
+  //#endregion
 }

@@ -81,4 +81,11 @@ export class OrderController {
   cancel(@Param('id') id: string, @UserId() userId: string) {
     return this.orderService.cancel(id, userId);
   }
+
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @Role(Roles.ADMIN)
+  @Patch(':id/cancel/as-admin')
+  cancelAsAdmin(@Param('id') id: string) {
+    return this.orderService.cancelAsAdmin(id);
+  }
 }
