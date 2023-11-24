@@ -74,4 +74,11 @@ export class OrderController {
   setPaid(@Param('id') id: string, @UserId() userId: string) {
     return this.orderService.setPaid(id, userId);
   }
+
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @Role(Roles.BUYER)
+  @Patch(':id/cancel')
+  cancel(@Param('id') id: string, @UserId() userId: string) {
+    return this.orderService.cancel(id, userId);
+  }
 }

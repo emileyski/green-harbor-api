@@ -84,6 +84,31 @@ export class OrderService {
     });
   }
 
+  async cancel(id: string, userId: string) {
+    const order = await this.orderRepository.findOne({
+      where: {
+        id,
+        user: { id: userId },
+        currentStatus: OrderStatusEnum.CREATED,
+      },
+      relations: ['orderStatuses'],
+    });
+
+    if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
+
+    order.currentStatus = OrderStatusEnum.CANCELED;
+
+    const orderStatus = this.orderStatusRepository.create({
+      status: OrderStatusEnum.CANCELED,
+      order: { id: order.id },
+    });
+
+    await this.orderRepository.save(order);
+    await this.orderStatusRepository.save(orderStatus);
+
+    return { ...order, orderStatuses: [...order.orderStatuses, orderStatus] };
+  }
+
   //#region Admin actions
 
   async findAll() {
