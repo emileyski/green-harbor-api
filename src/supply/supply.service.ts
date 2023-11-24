@@ -4,6 +4,7 @@ import { Supply } from './entities/supply.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlantService } from 'src/plant/plant.service';
 import { CreateSupplyDto } from './dto/create-supply.dto';
+import { UpdateSupplierDto } from './dto/UpdateSupplier.dto';
 
 @Injectable()
 export class SupplyService {
@@ -73,22 +74,57 @@ export class SupplyService {
     return supply;
   }
 
+  async updateSupplierData(id: string, supplierDto: UpdateSupplierDto) {
+    const supply = await this.supplyRepository.findOne({
+      where: { id },
+    });
+
+    if (!supply)
+      throw new BadRequestException(`Supply with ID ${id} not found`);
+
+    this.supplyRepository.merge(supply, supplierDto);
+
+    await this.supplyRepository.save(supply);
+
+    const updatedSupply = await this.supplyRepository.findOne({
+      where: { id },
+    });
+
+    return updatedSupply;
+  }
+
   async getAllInStock() {
     const supplies = await this.supplyRepository.find({
       where: { inSale: true },
       relations: ['plant'],
     });
 
-    return supplies;
+    return supplies.map((supply) => ({
+      ...supply,
+      plant: {
+        ...supply.plant,
+        pictures: supply.plant.pictures.map(
+          (picture) => `${process.env.APPLICATION_URL}/files/${picture}`,
+        ),
+      },
+    }));
   }
 
   //TODO: add saled relations
   async getAll() {
     const supplies = await this.supplyRepository.find({
-      relations: ['plant'],
+      relations: ['plant', 'orderItems'],
     });
 
-    return supplies;
+    return supplies.map((supply) => ({
+      ...supply,
+      plant: {
+        ...supply.plant,
+        pictures: supply.plant.pictures.map(
+          (picture) => `${process.env.APPLICATION_URL}/files/${picture}`,
+        ),
+      },
+    }));
   }
 
   async delete(id: string) {

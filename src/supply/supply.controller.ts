@@ -16,6 +16,7 @@ import { CreateSupplyDto } from './dto/create-supply.dto';
 import { User } from 'src/core/decorators/user.decorator';
 import { RoleGuard } from 'src/core/guards/role.guard';
 import { ApiTags } from '@nestjs/swagger';
+import { UpdateSupplierDto } from './dto/UpdateSupplier.dto';
 
 @ApiTags('supply')
 @Controller('supply')
@@ -54,6 +55,16 @@ export class SupplyController {
   @Patch(':id/remove-from-stock')
   async removeFromStock(@Param('id') id: string) {
     return this.supplyService.removeFromStock(id);
+  }
+
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @Role(Roles.ADMIN)
+  @Patch(':id/supplier')
+  updateSupplier(
+    @Param('id') id: string,
+    @Body() updateSupplierDto: UpdateSupplierDto,
+  ) {
+    return this.supplyService.updateSupplierData(id, updateSupplierDto);
   }
 
   @UseGuards(AccessTokenGuard, RoleGuard)
