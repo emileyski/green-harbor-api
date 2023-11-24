@@ -9,5 +9,6 @@ import { PlantModule } from 'src/plant/plant.module';
   imports: [TypeOrmModule.forFeature([Supply]), PlantModule],
   controllers: [SupplyController],
   providers: [SupplyService],
+  exports: [SupplyService],
 })
 export class SupplyModule {}

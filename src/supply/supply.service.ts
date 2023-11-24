@@ -12,6 +12,9 @@ export class SupplyService {
     @InjectRepository(Supply)
     private readonly supplyRepository: Repository<Supply>,
   ) {}
+  async getByIds(ids: string[]): Promise<Supply[]> {
+    return this.supplyRepository.findByIds(ids);
+  }
 
   async createSupply(createSupplyDto: CreateSupplyDto) {
     const plant = await this.plantService.findOne(createSupplyDto.plantId);
@@ -86,5 +89,21 @@ export class SupplyService {
     });
 
     return supplies;
+  }
+
+  async delete(id: string) {
+    const deleteResult = await this.supplyRepository.delete(id);
+
+    if (deleteResult.affected === 0) {
+      throw new Error(`Supply with ID ${id} not found`);
+    }
+
+    return { message: `Supply with ID ${id} deleted` };
+  }
+
+  async updateMany(supplies: Supply[]) {
+    const updateResult = await this.supplyRepository.save(supplies);
+
+    return updateResult;
   }
 }

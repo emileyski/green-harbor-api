@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -14,7 +15,9 @@ import { Roles } from 'src/core/enums/roles.enum';
 import { CreateSupplyDto } from './dto/create-supply.dto';
 import { User } from 'src/core/decorators/user.decorator';
 import { RoleGuard } from 'src/core/guards/role.guard';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('supply')
 @Controller('supply')
 export class SupplyController {
   constructor(private readonly supplyService: SupplyService) {}
@@ -51,5 +54,12 @@ export class SupplyController {
   @Patch(':id/remove-from-stock')
   async removeFromStock(@Param('id') id: string) {
     return this.supplyService.removeFromStock(id);
+  }
+
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @Role(Roles.ADMIN)
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.supplyService.delete(id);
   }
 }

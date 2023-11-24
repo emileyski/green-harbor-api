@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -44,6 +48,34 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
+  }
+
+  async refreshTokens(userId: string, token: string): Promise<Tokens> {
+    const { token: hashedRefreshToken, role } =
+      await this.usersService.findById(userId);
+
+    if (!hashedRefreshToken) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+    const isRefreshTokenValid = await verify(hashedRefreshToken, token);
+
+    if (!isRefreshTokenValid) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+    console.log(userId, role);
+
+    const { accessToken, refreshToken } = await this.generateTokens({
+      id: userId,
+      role,
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async logout(userId: string) {
+    await this.usersService.updateRefreshToken(userId, null);
+
+    return { message: 'Logged out successfully' };
   }
 
   //#region token generation
