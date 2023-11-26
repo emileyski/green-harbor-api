@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SupplyService } from './supply.service';
@@ -17,6 +18,8 @@ import { User } from 'src/core/decorators/user.decorator';
 import { RoleGuard } from 'src/core/guards/role.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateSupplierDto } from './dto/UpdateSupplier.dto';
+import { Public } from 'src/core/decorators/public.decorator';
+import { CartDto } from './dto/cart.dto';
 
 @ApiTags('supply')
 @Controller('supply')
@@ -24,8 +27,30 @@ export class SupplyController {
   constructor(private readonly supplyService: SupplyService) {}
 
   @Get('in-stock')
-  async getAllInStock() {
-    return this.supplyService.getAllInStock();
+  async getAllInStock(
+    @Query('name') name: string,
+    @Query('sort-by') sortBy: string,
+    @Query('asc') asc: 'ASC' | 'DESC',
+    @Query('min-price') minPrice: number,
+    @Query('max-price') maxPrice: number,
+  ) {
+    return this.supplyService.getAllInStock(
+      name,
+      sortBy,
+      asc,
+      minPrice,
+      maxPrice,
+    );
+  }
+
+  @Get('count-statistics')
+  async getCountStatistics() {
+    return this.supplyService.getStatisticsOnTheSuppliesNumberAtTheWarehouse();
+  }
+
+  @Get(':id/in-stock')
+  async getOneInStock(@Param('id') id: string) {
+    return this.supplyService.getOneInStock(id);
   }
 
   @UseGuards(AccessTokenGuard)
@@ -69,8 +94,35 @@ export class SupplyController {
 
   @UseGuards(AccessTokenGuard, RoleGuard)
   @Role(Roles.ADMIN)
+  @Patch(':id/count')
+  updateCount(@Param('id') id: string, @Body() count: number) {
+    return this.supplyService.updateCount(id, count);
+  }
+
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @Role(Roles.ADMIN)
+  @Patch(':id/price')
+  updatePrice(@Param('id') id: string, @Body() price: number) {
+    return this.supplyService.updatePrice(id, price);
+  }
+
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @Role(Roles.ADMIN)
+  @Patch(':id/expiry-date')
+  updateExpiryDate(@Param('id') id: string, @Body() expiryDate: Date) {
+    return this.supplyService.updateExpiryDate(id, expiryDate);
+  }
+
+  @UseGuards(AccessTokenGuard, RoleGuard)
+  @Role(Roles.ADMIN)
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.supplyService.delete(id);
+  }
+
+  @Public()
+  @Post('/cart')
+  async getCartData(@Body() cartDto: CartDto) {
+    return this.supplyService.getCartData(cartDto);
   }
 }

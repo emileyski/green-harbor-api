@@ -21,7 +21,11 @@ export class PlantService {
 
     const plant = this.plantRepository.create({
       ...createPlantDto,
+      characteristics: JSON.parse(
+        createPlantDto.characteristics,
+      ) as PlantCharacteristic[],
       pictures: images.map((image) => image.id),
+      category: { id: createPlantDto.categoryId },
     });
 
     await this.plantRepository.save(plant);
@@ -104,6 +108,10 @@ export class PlantService {
     await this.plantRepository.save(plant);
 
     return plant;
+  }
+
+  async findByIds(ids: string[]) {
+    return this.plantRepository.findByIds(ids);
   }
 
   //TODO: implement pictures update

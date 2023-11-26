@@ -21,6 +21,16 @@ import { ApiTags } from '@nestjs/swagger';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  @Get('popular-plants')
+  async getPopularPlants() {
+    return this.orderService.getPopularPlants();
+  }
+
+  @Get('order-statistics')
+  async getOrderStatistics() {
+    return this.orderService.getStatisticsOnTheTotalPriceOfOrdersByDay();
+  }
+
   @UseGuards(AccessTokenGuard)
   @Post()
   create(@Body() createOrderDto: CreateOrderDto, @UserId() userId: string) {
@@ -68,8 +78,8 @@ export class OrderController {
     return this.orderService.setDelivered(id);
   }
 
-  @UseGuards(AccessTokenGuard, RoleGuard)
-  @Role(Roles.BUYER)
+  @UseGuards(AccessTokenGuard)
+  // @Role(Roles.BUYER)
   @Patch(':id/paid')
   setPaid(@Param('id') id: string, @UserId() userId: string) {
     return this.orderService.setPaid(id, userId);

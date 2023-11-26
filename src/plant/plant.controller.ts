@@ -35,6 +35,7 @@ export class PlantController {
     }),
   )
   create(@Body() createPlantDto: CreatePlantDto, @UploadedFiles() images) {
+    // console.log(createPlantDto);
     return this.plantService.create(createPlantDto, images);
   }
 

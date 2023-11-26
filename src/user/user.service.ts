@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hash } from 'argon2';
+import { Roles } from 'src/core/enums/roles.enum';
 
 @Injectable()
 export class UserService {
@@ -15,6 +16,18 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  async getAll(): Promise<User[]> {
+    return (await this.userRepository.find()).map((user) => {
+      delete user.password;
+
+      const authorized = !!user.token;
+
+      delete user.token;
+
+      return { ...user, authorized };
+    });
+  }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
@@ -102,6 +115,27 @@ export class UserService {
     return await this.userRepository.findOne({ where: { id } });
   }
 
+  getRegistrationStatistics() {
+    return this.userRepository.query(
+      `SELECT DATE_TRUNC('day', "createdAt") AS "date", COUNT(*) AS "count" FROM "user" GROUP BY DATE_TRUNC('day', "createdAt") ORDER BY DATE_TRUNC('day', "createdAt")`,
+    );
+  }
+
+  async updateAsAdmin(id: string, updateDto: any) {
+    console.log(updateDto);
+
+    const updateResult = await this.userRepository.update(id, {
+      ...updateDto,
+      role: updateDto.role === 'ADMIN' ? Roles.ADMIN : Roles.BUYER,
+    });
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return await this.userRepository.findOne({ where: { id } });
+  }
+
   async updatePassword(id: string, password: string) {
     const hashedPassword = await hash(password);
 
@@ -124,6 +158,16 @@ export class UserService {
     const updateResult = await this.userRepository.update(id, {
       mobilePhone: phone,
     });
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return await this.userRepository.findOne({ where: { id } });
+  }
+
+  async updateRole(id: string, role: Roles) {
+    const updateResult = await this.userRepository.update(id, { role });
 
     if (updateResult.affected === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);

@@ -24,6 +24,40 @@ export class OrderService {
     private readonly supplyService: SupplyService,
   ) {}
 
+  async getPopularPlants() {
+    const data = await this.orderItemRepository.query(
+      `SELECT
+      plant.id AS plant_id,
+      plant.name AS plant_name,
+      COUNT(*) AS purchase_count
+    FROM
+      order_item
+    JOIN
+      supply ON order_item."supplyId" = supply.id
+    JOIN
+      plant ON supply."plantId" = plant.id
+    GROUP BY
+      plant.id, plant.name
+    ORDER BY
+      purchase_count DESC;    
+      `,
+    );
+
+    return data;
+  }
+
+  getStatisticsOnTheNumberOfOrdersByDay() {
+    return this.orderRepository.query(
+      `SELECT DATE_TRUNC('day', "createdAt") AS day, COUNT(*) AS count FROM "order" GROUP BY day ORDER BY day DESC LIMIT 7`,
+    );
+  }
+
+  getStatisticsOnTheTotalPriceOfOrdersByDay() {
+    return this.orderRepository.query(
+      `SELECT DATE_TRUNC('day', "createdAt") AS day, SUM("totalPrice") AS sum FROM "order" GROUP BY day ORDER BY day DESC LIMIT 7`,
+    );
+  }
+
   async create(createOrderDto: CreateOrderDto, userId: string) {
     const supplies = await this.supplyService.getByIds(
       createOrderDto.orderItems.map((item) => item.productSupplyId),
@@ -273,7 +307,8 @@ export class OrderService {
         `Order with ID ${id} is not in DELIVERED status`,
       );
 
-    order.currentStatus = OrderStatusEnum.PAID;
+    order.currentStatus = OrderStatusEnum.COMPLETED;
+    order.completedAt = new Date();
 
     const orderStatusPaid = this.orderStatusRepository.create({
       status: OrderStatusEnum.PAID,

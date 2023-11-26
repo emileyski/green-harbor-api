@@ -20,10 +20,10 @@ export class Plant {
   @Column()
   description: string;
 
-  @Column({ type: 'jsonb', nullable: true, default: [] })
+  @Column({ type: 'json', nullable: true, default: [] })
   pictures: string[];
 
-  @Column({ type: 'jsonb', nullable: true, default: [] })
+  @Column({ type: 'json', nullable: true, default: [] })
   characteristics: PlantCharacteristic[];
 
   @ManyToOne(() => Category, (category) => category.plants, {

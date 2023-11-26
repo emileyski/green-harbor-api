@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsObject, IsString } from 'class-validator';
-import { PlantCharacteristic } from 'src/core/interfaces/plant-characteristic.interface';
 
 export class CreatePlantDto {
   @ApiProperty({
@@ -35,7 +34,7 @@ export class CreatePlantDto {
   })
   @IsNotEmpty()
   @IsObject()
-  characteristics: PlantCharacteristic[];
+  characteristics: string;
 
   @ApiProperty({
     description: 'The category id of the plant',
