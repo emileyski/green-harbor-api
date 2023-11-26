@@ -20,6 +20,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UpdateSupplierDto } from './dto/UpdateSupplier.dto';
 import { Public } from 'src/core/decorators/public.decorator';
 import { CartDto } from './dto/cart.dto';
+import { UserId } from 'src/core/decorators/user-id.decorator';
 
 @ApiTags('supply')
 @Controller('supply')
@@ -63,9 +64,12 @@ export class SupplyController {
   @UseGuards(AccessTokenGuard, RoleGuard)
   @Role(Roles.ADMIN)
   @Post()
-  async createSupply(@Body() createSupplyDto: CreateSupplyDto) {
+  async createSupply(
+    @Body() createSupplyDto: CreateSupplyDto,
+    @UserId() userId: string,
+  ) {
     // console.log('user', user);
-    return this.supplyService.createSupply(createSupplyDto);
+    return this.supplyService.createSupply(createSupplyDto, userId);
   }
 
   @UseGuards(AccessTokenGuard)

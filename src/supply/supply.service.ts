@@ -10,6 +10,11 @@ import { PlantService } from 'src/plant/plant.service';
 import { CreateSupplyDto } from './dto/create-supply.dto';
 import { UpdateSupplierDto } from './dto/UpdateSupplier.dto';
 import { CartDto } from './dto/cart.dto';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as nodemailer from 'nodemailer';
+import * as pdfMakePrinter from 'pdfmake/src/printer';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class SupplyService {
@@ -17,6 +22,7 @@ export class SupplyService {
     private plantService: PlantService,
     @InjectRepository(Supply)
     private readonly supplyRepository: Repository<Supply>,
+    private userService: UserService,
   ) {}
 
   getStatisticsOnTheSuppliesNumberAtTheWarehouse() {
@@ -34,12 +40,14 @@ export class SupplyService {
     return this.supplyRepository.findByIds(ids);
   }
 
-  async createSupply(createSupplyDto: CreateSupplyDto) {
+  async createSupply(createSupplyDto: CreateSupplyDto, userId: string) {
+    const user = await this.userService.findById(userId);
+
     const plant = await this.plantService.findOne(createSupplyDto.plantId);
 
     if (!plant)
       throw new NotFoundException(
-        `Plant with ID ${createSupplyDto.plantId} found`,
+        `Plant with ID ${createSupplyDto.plantId} not found`,
       );
 
     const supply = this.supplyRepository.create({
@@ -48,7 +56,106 @@ export class SupplyService {
       plant: { id: plant.id },
     });
 
-    return this.supplyRepository.save(supply);
+    // Сохранение поставки
+    const savedSupply = await this.supplyRepository.save(supply);
+
+    // Генерация отчёта в PDF
+    const pdfFileName = `supply_report_${savedSupply.id}.pdf`;
+    const pdfPath = path.join(__dirname, pdfFileName);
+    const pdfStream = fs.createWriteStream(pdfPath);
+
+    const fonts = {
+      Roboto: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique',
+      },
+    };
+
+    const printer = new pdfMakePrinter(fonts);
+
+    const docDefinition = {
+      content: [
+        { text: 'Supply Report', style: 'header' },
+        // Добавляем всю информацию в таблицу
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', '*'],
+            body: [
+              ['Parameter', 'Value'],
+              ['ID', savedSupply.id],
+              ['Count', savedSupply.count],
+              ['Price', savedSupply.price],
+              ['Supplier Name', savedSupply.supplierName],
+              ['Supplier Phone', savedSupply.supplierPhone],
+              ['Supplier Address', savedSupply.supplierAddress],
+              ['Supplier Email', savedSupply.supplierEmail],
+              ['Expiration Date', savedSupply.expirationDate],
+              ['Delivery Date', savedSupply.deliveryDate],
+              ['In Sale', savedSupply.inSale ? 'Yes' : 'No'],
+            ],
+          },
+        },
+        {
+          text: `Report generated on: ${new Date().toLocaleString()}`,
+          style: 'date',
+        },
+      ],
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+          alignment: 'center',
+          margin: [0, 0, 0, 10],
+        },
+        date: {
+          fontSize: 10,
+          italic: true,
+          alignment: 'right',
+        },
+      },
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    pdfDoc.pipe(pdfStream);
+    pdfDoc.end();
+
+    // Отправка отчёта на почту
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'bohdan.ilienko@nure.ua',
+        pass: 'cewholrtxflavjru',
+      },
+    });
+
+    const mailOptions = {
+      from: 'bohdan.ilienko@nure.ua',
+      to: user.email,
+      subject: 'Supply Report',
+      text: 'Пожалуйста, найдите вложенный отчёт поставки.',
+      attachments: [
+        {
+          filename: pdfFileName,
+          path: pdfPath,
+        },
+      ],
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Ошибка при отправке почты:', error);
+      } else {
+        console.log('Email отправлен: ' + info.response);
+      }
+
+      // Удаление временного PDF-файла после отправки
+      fs.unlinkSync(pdfPath);
+    });
+
+    return savedSupply;
   }
 
   async putToStock(id: string) {
